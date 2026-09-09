@@ -1,9 +1,9 @@
-pipeline{
+pipeline {
     agent any
 
-    stages{
-        stage('Unit Tests - Backend'){
-            agent{
+    stages {
+        stage('Unit Tests - Backend') {
+            agent {
                 docker {
                     image 'golang:1.20'
                     reuseNode true
@@ -13,36 +13,38 @@ pipeline{
                 GOPATH  = "${WORKSPACE}/.go"
                 GOCACHE = "${WORKSPACE}/.cache"
             }
-            steps{
-                dir('bugtracker-backend'){
+            steps {
+                dir('bugtracker-backend') {
                     sh 'go test -v ./...'
                 }
             }
-                post{
+                post {
                     always {
                         junit 'bugtracker-backend/test-results.xml'
                     }
             }
         }
 
-        stage('Unit Tests - Frontend'){
-            agent{
+        stage('Unit Tests - Frontend') {
+            agent {
                 docker {
                     image 'node:20'
                     reuseNode true
                 }
             }
-            steps{
-                dir('bugtracker-frontend'){
-                    sh 'npm install'
-                    sh 'npm test'
-                }   
+            steps {
+                dir('bugtracker-frontend') {
+                    sh '''
+                        npm ci
+                        npm test
+                    '''
+                }
             }
-                post{
-                    always {
-                        junit 'bugtracker-frontend/test-results.xml'
-                    }
-            } 
+            post {
+                always {
+                    junit 'bugtracker-frontend/test-results.xml'
+                }
+            }
         }
     }
 }
