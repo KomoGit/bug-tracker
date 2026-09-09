@@ -17,11 +17,11 @@ pipeline{
                 dir('bugtracker-backend'){
                     sh 'go test -v ./...'
                 }
+            }
                 post{
                     always {
                         junit 'bugtracker-backend/test-results.xml'
                     }
-                }
             }
         }
 
@@ -36,13 +36,13 @@ pipeline{
                 dir('bugtracker-frontend'){
                     sh 'npm install'
                     sh 'npm test'
-                }
+                }   
+            }
                 post{
                     always {
                         junit 'bugtracker-frontend/test-results.xml'
                     }
-                }    
-            }
+            } 
         }
     }
 }
