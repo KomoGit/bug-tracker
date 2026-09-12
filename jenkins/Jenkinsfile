@@ -49,6 +49,7 @@ go tool cover -html=coverage.out -o reports/coverage.html
                 }
             }
         }
+
         stage('Unit Tests - Frontend') {
             agent {
                 docker {
@@ -60,7 +61,7 @@ go tool cover -html=coverage.out -o reports/coverage.html
                 npm_config_cache = "${WORKSPACE}/.npm"
                 HOME             = "${WORKSPACE}"
             }
-                        steps {
+            steps {
                 dir('bugtracker-frontend') {
                     sh '''#!/bin/bash
 set -x
@@ -83,6 +84,7 @@ npm test
                         alwaysLinkToLastBuild: true
                     ]
                 }
+            }
         }
     }
 }
