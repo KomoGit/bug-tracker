@@ -17,15 +17,16 @@ pipeline {
             steps {
                 dir('bugtracker-backend') {
                     sh '''
-                        set -o pipefail
-                        mkdir -p reports
+                    #!/bin/bash
+                            set -e -o pipefail
+                            mkdir -p reports
 
-                        go install github.com/jstemmer/go-junit-report/v2@latest
+                            go install github.com/jstemmer/go-junit-report/v2@latest
 
-                        go test -v -coverprofile=coverage.out -covermode=atomic ./... 2>&1 \
+                            go test -v -coverprofile=coverage.out -covermode=atomic ./... 2>&1 \
                             | go-junit-report -set-exit-code > test-results.xml
 
-                        go tool cover -html=coverage.out -o reports/coverage.html
+                            go tool cover -html=coverage.out -o reports/coverage.html
                     '''
                 }
             }
