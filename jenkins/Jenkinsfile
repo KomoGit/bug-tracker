@@ -78,6 +78,9 @@ go tool cover -html=coverage.out -o reports/coverage.html
                         reportDir: 'bugtracker-frontend/reports/coverage',
                         reportFiles: 'index.html',
                         reportName: 'Frontend Coverage Report',
+                        allowMissing: true,
+                        keepAll: true,
+                        alwaysLinkToLastBuild: true
                     ]
                 }
             }
