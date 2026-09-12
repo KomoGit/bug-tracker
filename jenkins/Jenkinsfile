@@ -12,29 +12,34 @@ pipeline {
             environment {
                 GOPATH  = "${WORKSPACE}/.go"
                 GOCACHE = "${WORKSPACE}/.cache"
+                PATH    = "${WORKSPACE}/.go/bin:${PATH}"
             }
             steps {
                 dir('bugtracker-backend') {
                     sh '''
-                        go install github.com/jstemmer/go-junit-report@latest
-                        go test -v ./... 2>&1 | go-junit-report > test-results.xml
-
-                        # Generate code coverage report
-                        go test -coverprofile=coverage.out -covermode=atomic ./...
-                        go tool cover -html=coverage.out -o coverage.html
-
+                        set -o pipefail
                         mkdir -p reports
-                        mv coverage.html reports/
+
+                        go install github.com/jstemmer/go-junit-report/v2@latest
+
+                        go test -v -coverprofile=coverage.out -covermode=atomic ./... 2>&1 \
+                            | go-junit-report -set-exit-code > test-results.xml
+
+                        go tool cover -html=coverage.out -o reports/coverage.html
                     '''
                 }
             }
             post {
                 always {
-                    junit 'bugtracker-backend/test-results.xml'
+                    junit allowEmptyResults: true,
+                          testResults: 'bugtracker-backend/test-results.xml'
                     publishHTML target: [
                         reportDir: 'bugtracker-backend/reports',
                         reportFiles: 'coverage.html',
-                        reportName: 'Backend Coverage Report'
+                        reportName: 'Backend Coverage Report',
+                        allowMissing: true,
+                        keepAll: true,
+                        alwaysLinkToLastBuild: true
                     ]
                 }
             }
@@ -47,17 +52,22 @@ pipeline {
                     reuseNode true
                 }
             }
+            environment {
+                npm_config_cache = "${WORKSPACE}/.npm"
+                HOME             = "${WORKSPACE}"
+            }
             steps {
                 dir('bugtracker-frontend') {
                     sh '''
                         npm ci
-                        npm test
+                        npm test -- --ci --reporters=default --reporters=jest-junit
                     '''
                 }
             }
             post {
                 always {
-                    junit 'bugtracker-frontend/test-results.xml'
+                    junit allowEmptyResults: true,
+                          testResults: 'bugtracker-frontend/test-results.xml'
                 }
             }
         }
