@@ -65,14 +65,20 @@ go tool cover -html=coverage.out -o reports/coverage.html
                 dir('bugtracker-frontend') {
                     sh '''
                         npm ci
-                        npm test -- --ci --reporters=default --reporters=jest-junit
+                        npm test
+                        mkdir -p reports
+                        mv coverage reports
                     '''
                 }
             }
             post {
                 always {
-                    junit allowEmptyResults: true,
-                          testResults: 'bugtracker-frontend/test-results.xml'
+                    junit testResults: 'bugtracker-frontend/test-results.xml'
+                    publishHTML target: [
+                        reportDir: 'bugtracker-frontend/reports/coverage',
+                        reportFiles: 'index.html',
+                        reportName: 'Frontend Coverage Report',
+                    ]
                 }
             }
         }
