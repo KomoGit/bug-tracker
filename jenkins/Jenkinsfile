@@ -49,7 +49,6 @@ go tool cover -html=coverage.out -o reports/coverage.html
                 }
             }
         }
-
         stage('Unit Tests - Frontend') {
             agent {
                 docker {
@@ -61,21 +60,22 @@ go tool cover -html=coverage.out -o reports/coverage.html
                 npm_config_cache = "${WORKSPACE}/.npm"
                 HOME             = "${WORKSPACE}"
             }
-            steps {
+                        steps {
                 dir('bugtracker-frontend') {
-                    sh '''
-                        npm ci
-                        npm test
-                        mkdir -p reports
-                        mv coverage reports
-                    '''
+                    sh '''#!/bin/bash
+set -x
+
+npm ci
+npm test
+'''
                 }
             }
             post {
                 always {
-                    junit testResults: 'bugtracker-frontend/test-results.xml'
+                    junit allowEmptyResults: true,
+                          testResults: 'bugtracker-frontend/test-results.xml'
                     publishHTML target: [
-                        reportDir: 'bugtracker-frontend/reports/coverage',
+                        reportDir: 'bugtracker-frontend/coverage',
                         reportFiles: 'index.html',
                         reportName: 'Frontend Coverage Report',
                         allowMissing: true,
@@ -83,7 +83,6 @@ go tool cover -html=coverage.out -o reports/coverage.html
                         alwaysLinkToLastBuild: true
                     ]
                 }
-            }
         }
     }
 }
