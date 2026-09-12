@@ -12,7 +12,6 @@ pipeline {
             environment {
                 GOPATH  = "${WORKSPACE}/.go"
                 GOCACHE = "${WORKSPACE}/.cache"
-                PATH    = "${WORKSPACE}/.go/bin:${PATH}"
             }
             steps {
                 dir('bugtracker-backend') {
@@ -20,9 +19,13 @@ pipeline {
 set -e -o pipefail
 set -x
 
+export PATH="$(go env GOPATH)/bin:$PATH"
+
 mkdir -p reports
 
 go install github.com/jstemmer/go-junit-report/v2@latest
+
+command -v go-junit-report
 
 go test -v -coverprofile=coverage.out -covermode=atomic ./... 2>&1 \
     | go-junit-report -set-exit-code > test-results.xml
