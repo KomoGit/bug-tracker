@@ -91,4 +91,9 @@ npm test
             }
         }
     }
+    post {
+        always {
+            cleanWs()
+        }
+    }
 }
