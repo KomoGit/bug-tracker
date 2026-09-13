@@ -2,20 +2,22 @@ pipeline {
     agent any
 
     stages {
-        stage('Unit Tests - Backend') {
-            agent {
-                docker {
-                    image 'golang:1.23'
-                    reuseNode true
-                }
-            }
-            environment {
-                GOPATH  = "${WORKSPACE}/.go"
-                GOCACHE = "${WORKSPACE}/.cache"
-            }
-            steps {
-                dir('bugtracker-backend') {
-                    sh '''#!/bin/bash
+        stage('Execute Unit Tests') {
+            parallel {
+                stage('Unit Tests - Backend') {
+                    agent {
+                        docker {
+                            image 'golang:1.23'
+                            reuseNode true
+                        }
+                    }
+                    environment {
+                        GOPATH  = "${WORKSPACE}/.go"
+                        GOCACHE = "${WORKSPACE}/.cache"
+                    }
+                    steps {
+                        dir('bugtracker-backend') {
+                            sh '''#!/bin/bash
 set -e -o pipefail
 set -x
 
@@ -32,57 +34,59 @@ go test -v -coverprofile=coverage.out -covermode=atomic ./... 2>&1 \
 
 go tool cover -html=coverage.out -o reports/coverage.html
 '''
+                        }
+                    }
+                    post {
+                        always {
+                            junit allowEmptyResults: true,
+                                  testResults: 'bugtracker-backend/test-results.xml'
+                            publishHTML target: [
+                                reportDir: 'bugtracker-backend/reports',
+                                reportFiles: 'coverage.html',
+                                reportName: 'Backend Coverage Report',
+                                allowMissing: true,
+                                keepAll: true,
+                                alwaysLinkToLastBuild: true
+                            ]
+                        }
+                    }
                 }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true,
-                          testResults: 'bugtracker-backend/test-results.xml'
-                    publishHTML target: [
-                        reportDir: 'bugtracker-backend/reports',
-                        reportFiles: 'coverage.html',
-                        reportName: 'Backend Coverage Report',
-                        allowMissing: true,
-                        keepAll: true,
-                        alwaysLinkToLastBuild: true
-                    ]
-                }
-            }
-        }
 
-        stage('Unit Tests - Frontend') {
-            agent {
-                docker {
-                    image 'node:20'
-                    reuseNode true
-                }
-            }
-            environment {
-                npm_config_cache = "${WORKSPACE}/.npm"
-                HOME             = "${WORKSPACE}"
-            }
-            steps {
-                dir('bugtracker-frontend') {
-                    sh '''#!/bin/bash
+                stage('Unit Tests - Frontend') {
+                    agent {
+                        docker {
+                            image 'node:20'
+                            reuseNode true
+                        }
+                    }
+                    environment {
+                        npm_config_cache = "${WORKSPACE}/.npm"
+                        HOME             = "${WORKSPACE}"
+                    }
+                    steps {
+                        dir('bugtracker-frontend') {
+                            sh '''#!/bin/bash
 set -x
 
 npm ci
 npm test
 '''
-                }
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true,
-                          testResults: 'bugtracker-frontend/test-results.xml'
-                    publishHTML target: [
-                        reportDir: 'bugtracker-frontend/coverage',
-                        reportFiles: 'index.html',
-                        reportName: 'Frontend Coverage Report',
-                        allowMissing: true,
-                        keepAll: true,
-                        alwaysLinkToLastBuild: true
-                    ]
+                        }
+                    }
+                    post {
+                        always {
+                            junit allowEmptyResults: true,
+                                  testResults: 'bugtracker-frontend/test-results.xml'
+                            publishHTML target: [
+                                reportDir: 'bugtracker-frontend/coverage',
+                                reportFiles: 'index.html',
+                                reportName: 'Frontend Coverage Report',
+                                allowMissing: true,
+                                keepAll: true,
+                                alwaysLinkToLastBuild: true
+                            ]
+                        }
+                    }
                 }
             }
         }
